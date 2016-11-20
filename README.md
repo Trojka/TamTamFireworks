@@ -1,2 +1,2 @@
 # TamTamFireworks
-Create a text and makr it appear in fireworks
+Create a text and make it appear in fireworks
