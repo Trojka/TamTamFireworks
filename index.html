@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TamTam Fireworks</title>
+        <style type="text/css">
+            body{font-family: arial;}
+            h4{font-weight:normal;}
+        </style>
+    </head>
+    <body>
+        <div id="canvasDiv" style="width:100%;height:100%;border: 1px solid #ddd;"></div>
+
+	<!--Script at the bottom of the page-->
+	<script type="text/javascript" src="script/raphael.js" /></script>
+    <script>
+	
+		var initialRadius = 5;
+		var explosionExpansionRate1 = 4;
+		var explosionExpansionRate2 = 1.25;
+		var explosionShrapnelExpansionRate = 15;
+		
+		var animationStepDuration = 100;
+	
+        var paper = Raphael("canvasDiv", 650, 1000);    
+		
+        var launchStyle = {
+            "fill":"#FFFFFF",
+            "stroke":"#000000",
+            "stroke-width":2
+        }
+		
+		var explosionStyle = {
+            "fill":"#FF0000",
+            "stroke":"#660000",
+            "stroke-width":1
+		}
+		
+        var circle = paper.circle(300, 300, initialRadius).attr(launchStyle);
+		
+		var positionAnimation = Raphael.animation({
+			"cx":300,
+			"cy":100
+		}, animationStepDuration, 'easeOut');
+		
+		var exlosionAnimation = Raphael.animation({
+			"r" : (initialRadius * explosionExpansionRate1),
+			"fill" : "#FF0000",
+			"stroke" : "#660000"
+		}, animationStepDuration, 'easeOut', function() {
+			this.animate(explosionFadeOut);
+		});
+		
+		var explosionFadeOut = Raphael.animation({
+			"r" : (initialRadius * explosionExpansionRate1 * explosionExpansionRate2),
+			"fill" : "#FFFFFF",
+			"stroke" : "#FFFFFF"
+		}, animationStepDuration, 'easeOut', function() {
+			var count = 10;
+			var angleSpacing = (2 * Math.PI) / count;
+			paper.setStart();
+			for(i = 0; i < count; i++) {
+				var circle = paper.circle(300, 100, 5);
+			}
+			var explosionSet = paper.setFinish();
+			explosionSet.attr(explosionStyle);
+			var explosionIndex = 1;
+			explosionSet.forEach(function(e){
+				var shrapnelAngle = explosionIndex * angleSpacing;
+				var shrapnelRadius = (initialRadius * explosionShrapnelExpansionRate);
+				var toX = 300 + (shrapnelRadius * Math.cos(shrapnelAngle));
+				var toY = 100 + (shrapnelRadius * Math.sin(shrapnelAngle));
+				var ctrlP2YDelta = (Math.sign(Math.sin(shrapnelAngle)) > 0) ? 0 : (shrapnelRadius * Math.sin(shrapnelAngle));
+
+				console.log(explosionIndex + ", " + Math.sign(Math.sin(shrapnelAngle)) + ", " + ctrlP2YDelta);
+				
+				//https://www.safaribooksonline.com/library/view/raphaeljs/9781449365356/ch04.html
+				var ctrlP1 = toX + "," + toY + " ";
+				var ctrlP2 = (toX + ((Math.sign(Math.cos(shrapnelAngle))) * 50)) + "," + (toY + ctrlP2YDelta) + " ";				
+				var endP = (toX + ((Math.sign(Math.cos(shrapnelAngle))) * 50)) + "," + 300
+				
+				paper.circle(toX, toY, 2).attr({"fill":"blue"});
+				paper.circle((toX + ((Math.sign(Math.cos(shrapnelAngle))) * 50)), (toY + ctrlP2YDelta), 2).attr({"fill":"yellow"});
+				paper.circle((toX + ((Math.sign(Math.cos(shrapnelAngle))) * 50)), 300, 2).attr({"fill":"brown"});
+				
+				var pathString = "M 300, 100 C " + 
+					ctrlP1 +
+					ctrlP2 +
+					endP;
+					
+				console.log(pathString);
+				paper.path(pathString);
+				
+				e.animate({
+					"cx" : toX,
+					"cy" : toY
+				}, animationStepDuration, 'easeOut');
+				//explosionIndex++;
+			});
+		});
+		
+		var count = 10;
+		var angleSpacing = (2 * Math.PI) / count;
+		var explosionIndex = 0;
+		var shrapnelAngle = explosionIndex * angleSpacing;
+		var shrapnelRadius = (initialRadius * explosionShrapnelExpansionRate);
+		var toX = 300 + (shrapnelRadius * Math.cos(shrapnelAngle));
+		var toY = 100 + (shrapnelRadius * Math.sin(shrapnelAngle));
+		
+		var pathString = "M 300, 100 C " + 
+			toX + "," + toY + " " +
+			(toX + 50) + "," + toY + " " +
+			(toX + 50) + "," + 300;
+			
+		//console.log(pathString);
+		
+		//paper.path(pathString);
+		
+		circle.animate(positionAnimation);
+		circle.animate(exlosionAnimation.delay(animationStepDuration));
+		
+		// Following doesn't work, you must put it into the continuation of the previous animation
+		//circle.animate(explosionFadeOut.delay(2000));
+		
+    </script>
+</body>
+</html>
