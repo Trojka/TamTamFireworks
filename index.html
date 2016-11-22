@@ -14,19 +14,10 @@
 	<script type="text/javascript" src="script/raphael.js" /></script>
     <script>
 	
-		var initialRadius = 5;
-		var explosionExpansionRate1 = 4;
-		var explosionExpansionRate2 = 1.25;
-		var explosionShrapnelExpansionRate = 15;
-		
-		var animationStepDuration = 1000;
-		
-		var xInitPos = 300;
-		var yInitPos = 600;
-		var shootingHeight = 200;	
-		
-		var xPosition = xInitPos;
-		var yPosition = yInitPos - shootingHeight;
+			
+		var pathStyle = {
+			"opacity":0
+		}
 	
         var paper = Raphael("canvasDiv", 650, 1000);   
 
@@ -39,158 +30,278 @@
 			var guideLength = guide.getTotalLength();
 			var currentPoint = guide.getPointAtLength(percent * guideLength);
 			//console.log("animate to point x:"+currentPoint.x+", y:"+currentPoint.y);
-			var centerPoint = {
+			var animationTarget = {
 				cx: currentPoint.x,
 				cy: currentPoint.y,
-				opacity: (1 - percent)
+				opacity: 1 //(1 - percent)
 			}
 			
-			return centerPoint;
+			return animationTarget;
 		}
-		
-        var launchStyle = {
-            "fill":"#FFFFFF",
-            "stroke":"#000000",
-            "stroke-width":2
-        }
-		
-		var explosionStyle = {
-            "fill":"#FF0000",
-            "stroke":"#660000",
-            "stroke-width":1
-		}
-		
-		var pathStyle = {
-            "opacity":1
-		}
-		
-        var circle = paper.circle(xInitPos, yInitPos, initialRadius).attr(launchStyle);
-		
-		var positionAnimation = Raphael.animation({
-			"cx":xPosition,
-			"cy":yPosition
-		}, animationStepDuration, 'easeOut');
-		
-		var exlosionAnimation = Raphael.animation({
-			"r" : (initialRadius * explosionExpansionRate1),
-			"fill" : "#FF0000",
-			"stroke" : "#660000"
-		}, animationStepDuration, 'easeOut', function() {
-			this.animate(explosionFadeOut);
-		});
-		
-		var explosionFadeOut = Raphael.animation({
-			"r" : (initialRadius * explosionExpansionRate1 * explosionExpansionRate2),
-			"fill" : "#FFFFFF",
-			"stroke" : "#FFFFFF"
-		}, animationStepDuration, 'easeOut', function() {
-			var count = 28;
-			var angleSpacing = (2 * Math.PI) / count;
+	
+	
+		function Rocket(xPos, yPos) {
+			var initialRadius = 5;
+			var explosionExpansionRate1 = 4;
+			var explosionExpansionRate2 = 1.25;
+			var explosionShrapnelExpansionRate = 15;
 			
-			paper.setStart();
-			for(i = 0; i < count; i++) {
-				var circle = paper.circle(xPosition, yPosition, 5);
+			var animationStepDuration = 700;
+			
+			var xInitPos = xPos;
+			var yInitPos = yPos;
+			var shootingHeight = 200;	
+			
+			var xPosition = xInitPos;
+			var yPosition = yInitPos - shootingHeight;
+			
+			var launchStyle = {
+				"fill":"#FFFFFF",
+				"stroke":"#000000",
+				"stroke-width":2
 			}
-			var explosionSet = paper.setFinish();
 			
-			explosionSet.attr(explosionStyle);
+			var explosionStyle = {
+				"fill":"#FF0000",
+				"stroke":"#660000",
+				"stroke-width":1
+			}
 			
-			var explosionIndex = 0;
-			explosionSet.forEach(function(e){
-				var shrapnelAngle = explosionIndex * angleSpacing;
-				var shrapnelRadius = (initialRadius * explosionShrapnelExpansionRate);
+			var circle = paper.circle(xInitPos, yInitPos, initialRadius).attr(launchStyle);
+			
+			var positionAnimation = Raphael.animation({
+				"cx":xPosition,
+				"cy":yPosition
+			}, animationStepDuration, 'easeOut');
+			
+			var exlosionAnimation = Raphael.animation({
+				"r" : (initialRadius * explosionExpansionRate1),
+				"fill" : "#FF0000",
+				"stroke" : "#660000"
+			}, animationStepDuration, 'easeOut', function() {
+				this.animate(explosionFadeOut);
+			});
+			
+			var explosionFadeOut = Raphael.animation({
+				"r" : (initialRadius * explosionExpansionRate1 * explosionExpansionRate2),
+				"fill" : "#FFFFFF",
+				"stroke" : "#FFFFFF"
+			}, animationStepDuration, 'easeOut', pathTargetAnimation);
+			
+			function defaultTargetAnimation() {
+				var count = 28;
+				var angleSpacing = (2 * Math.PI) / count;
 				
-				var centerPt = xPosition + ", " + yPosition;
-				var startX = xPosition + (shrapnelRadius * Math.cos(shrapnelAngle));
-				var startY = yPosition + (shrapnelRadius * Math.sin(shrapnelAngle));
-				var toX = startX + (shrapnelRadius * Math.cos(shrapnelAngle));
-				var toY = startY + (shrapnelRadius * Math.sin(shrapnelAngle));
-				var ctrlP2XDelta = (Math.sign(Math.sin(shrapnelAngle)) < 0) ? ((Math.sign(Math.cos(shrapnelAngle))) * 50) : (shrapnelRadius * Math.cos(shrapnelAngle));
-				var ctrlP2YDelta = (Math.sign(Math.sin(shrapnelAngle)) < 0) ? 0 : (shrapnelRadius * Math.sin(shrapnelAngle));
-
-				//console.log(explosionIndex + ", " + Math.sign(Math.sin(shrapnelAngle)) + ", " + ctrlP2YDelta);
+				paper.setStart();
+				for(i = 0; i < count; i++) {
+					var circle = paper.circle(xPosition, yPosition, 5);
+				}
+				var explosionSet = paper.setFinish();
 				
-				//https://www.safaribooksonline.com/library/view/raphaeljs/9781449365356/ch04.html
-				var startPt = startX + ", " + startY;
-				var ctrlP1 = toX + "," + toY + " ";
-				var ctrlP2 = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta) + " ";				
-				var endP = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta + yInitPos)
+				explosionSet.attr(explosionStyle);
 				
-				//paper.circle(startX, startY, 2).attr({"fill":"green"});
-				//paper.circle(toX, toY, 2).attr({"fill":"blue"});
-				//paper.circle((toX + ctrlP2XDelta), (toY + ctrlP2YDelta), 2).attr({"fill":"yellow"});
-				//paper.circle((toX + ctrlP2XDelta), (toY + ctrlP2YDelta + 300), 2).attr({"fill":"brown"});
-				
-				var pathString = 
-					"M " + centerPt + 
-					"L " + startPt +
-					"M " + startPt + 
-					" C " + 
-					ctrlP1 +
-					ctrlP2 +
-					endP;
+				var explosionIndex = 0;
+				explosionSet.forEach(function(e){
+					var shrapnelAngle = explosionIndex * angleSpacing;
+					var shrapnelRadius = (initialRadius * explosionShrapnelExpansionRate);
 					
-				//console.log(pathString);
-				var path = paper.path(pathString).attr(pathStyle);
-				var elem = e;
-				var duration = animationStepDuration * path.getTotalLength() / shrapnelRadius;
-				
-				function animateAlongPath() {
-					//console.log("will now animate along the path[" + path.attr("path") + "]");
-					elem.attr({
+					var centerPt = xPosition + ", " + yPosition;
+					var startX = xPosition + (shrapnelRadius * Math.cos(shrapnelAngle));
+					var startY = yPosition + (shrapnelRadius * Math.sin(shrapnelAngle));
+					var toX = startX + (shrapnelRadius * Math.cos(shrapnelAngle));
+					var toY = startY + (shrapnelRadius * Math.sin(shrapnelAngle));
+					var ctrlP2XDelta = (Math.sign(Math.sin(shrapnelAngle)) < 0) ? ((Math.sign(Math.cos(shrapnelAngle))) * 50) : (shrapnelRadius * Math.cos(shrapnelAngle));
+					var ctrlP2YDelta = (Math.sign(Math.sin(shrapnelAngle)) < 0) ? 0 : (shrapnelRadius * Math.sin(shrapnelAngle));
+
+					//console.log(explosionIndex + ", " + Math.sign(Math.sin(shrapnelAngle)) + ", " + ctrlP2YDelta);
+					
+					//https://www.safaribooksonline.com/library/view/raphaeljs/9781449365356/ch04.html
+					var startPt = startX + ", " + startY;
+					var ctrlP1 = toX + "," + toY + " ";
+					var ctrlP2 = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta) + " ";				
+					var endP = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta + yInitPos)
+					
+					//paper.circle(startX, startY, 2).attr({"fill":"green"});
+					//paper.circle(toX, toY, 2).attr({"fill":"blue"});
+					//paper.circle((toX + ctrlP2XDelta), (toY + ctrlP2YDelta), 2).attr({"fill":"yellow"});
+					//paper.circle((toX + ctrlP2XDelta), (toY + ctrlP2YDelta + 300), 2).attr({"fill":"brown"});
+					
+					var pathString = 
+						"M " + centerPt + 
+						"L " + startPt +
+						"M " + startPt + 
+						" C " + 
+						ctrlP1 +
+						ctrlP2 +
+						endP;
+						
+					//console.log(pathString);
+					var path = paper.path(pathString).attr(pathStyle);
+					var elem = e;
+					var duration = animationStepDuration * path.getTotalLength() / shrapnelRadius;
+					
+					// Animate along a path
+					// https://www.safaribooksonline.com/library/view/learning-raphael-js/9781782169161/ch05s05.html
+					// http://stackoverflow.com/questions/13295656/raphaeljs-2-1-animate-along-path
+					// https://github.com/DmitryBaranovskiy/raphaeljs.com/blob/master/gear.html
+					// https://dmitrybaranovskiy.github.io/raphael/reference.html#Paper.customAttributes
+					
+					e.attr({
 						guide: path,
 						along: 0
 					});
-					elem.animate({along: 1}, duration, 'easeOut');
-				};
-				
-				// Animate along a path
-				// https://www.safaribooksonline.com/library/view/learning-raphael-js/9781782169161/ch05s05.html
-				// http://stackoverflow.com/questions/13295656/raphaeljs-2-1-animate-along-path
-				// https://github.com/DmitryBaranovskiy/raphaeljs.com/blob/master/gear.html
-				// https://dmitrybaranovskiy.github.io/raphael/reference.html#Paper.customAttributes
-				
-				//e.animate({
-				//	"cx" : startX,
-				//	"cy" : startY
-				//}, animationStepDuration, 'linear', animateAlongPath);
-				
-				e.attr({
-					guide: path,
-					along: 0
-				});
-				
-				e.animate({
-					along: 1
-				}, duration, 'easeOut');
+					
+					e.animate({
+						along: 1
+					}, duration, 'easeOut');
 
-				explosionIndex++;
-			});
-		});
+					explosionIndex++;
+				});
+			}
+			
+			function pathTargetAnimation() {
+				var count = 28;
+				var angleSpacing = (2 * Math.PI) / count;
+				
+				paper.setStart();
+				for(i = 0; i < count; i++) {
+					var circle = paper.circle(xPosition, yPosition, 5);
+				}
+				var explosionSet = paper.setFinish();
+				
+				explosionSet.attr(explosionStyle);
+				
+				var explosionIndex = 0;
+				var pathStep = targetPath.getTotalLength() / count;
+				explosionSet.forEach(function(e){
+					var shrapnelAngle = explosionIndex * angleSpacing;
+					var shrapnelRadius = (initialRadius * explosionShrapnelExpansionRate);
+					
+					var centerPt = xPosition + ", " + yPosition;
+					var startX = xPosition + (shrapnelRadius * Math.cos(shrapnelAngle));
+					var startY = yPosition + (shrapnelRadius * Math.sin(shrapnelAngle));
+					var toX = startX + (shrapnelRadius * Math.cos(shrapnelAngle));
+					var toY = startY + (shrapnelRadius * Math.sin(shrapnelAngle));
+					var ctrlP2XDelta = (Math.sign(Math.sin(shrapnelAngle)) < 0) ? ((Math.sign(Math.cos(shrapnelAngle))) * 50) : (shrapnelRadius * Math.cos(shrapnelAngle));
+					var ctrlP2YDelta = (Math.sign(Math.sin(shrapnelAngle)) < 0) ? 0 : (shrapnelRadius * Math.sin(shrapnelAngle));
+
+					var endPoint = targetPath.getPointAtLength(explosionIndex * pathStep);
+					
+					//console.log(explosionIndex + ", " + Math.sign(Math.sin(shrapnelAngle)) + ", " + ctrlP2YDelta);
+					
+					//https://www.safaribooksonline.com/library/view/raphaeljs/9781449365356/ch04.html
+					var startPt = startX + ", " + startY;
+					var ctrlP1 = toX + "," + toY + " ";
+					var ctrlP2 = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta) + " ";				
+					//var endP = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta + yInitPos)
+					var endP = endPoint.x + "," + endPoint.y;
+					
+					//paper.circle(startX, startY, 2).attr({"fill":"green"});
+					//paper.circle(toX, toY, 2).attr({"fill":"blue"});
+					//paper.circle((toX + ctrlP2XDelta), (toY + ctrlP2YDelta), 2).attr({"fill":"yellow"});
+					//paper.circle((toX + ctrlP2XDelta), (toY + ctrlP2YDelta + 300), 2).attr({"fill":"brown"});
+					
+					var pathString = 
+						"M " + centerPt + 
+						"L " + startPt +
+						"M " + startPt + 
+						" C " + 
+						ctrlP1 +
+						ctrlP2 +
+						endP;
+						
+					//console.log(pathString);
+					var path = paper.path(pathString).attr(pathStyle);
+					var elem = e;
+					var duration = animationStepDuration * path.getTotalLength() / shrapnelRadius;
+					
+					// Animate along a path
+					// https://www.safaribooksonline.com/library/view/learning-raphael-js/9781782169161/ch05s05.html
+					// http://stackoverflow.com/questions/13295656/raphaeljs-2-1-animate-along-path
+					// https://github.com/DmitryBaranovskiy/raphaeljs.com/blob/master/gear.html
+					// https://dmitrybaranovskiy.github.io/raphael/reference.html#Paper.customAttributes
+					
+					e.attr({
+						guide: path,
+						along: 0
+					});
+					
+					e.animate({
+						along: 1
+					}, duration, 'easeOut');
+
+					explosionIndex++;
+				});
+			}
 		
-		//var count = 10;
-		//var angleSpacing = (2 * Math.PI) / count;
-		//var explosionIndex = 2;
-		//var shrapnelAngle = explosionIndex * angleSpacing;
-		//var shrapnelRadius = yPosition; //(initialRadius * explosionShrapnelExpansionRate);
-		//var toX = xPosition + (shrapnelRadius * Math.cos(shrapnelAngle));
-		//var toY = yPosition + (shrapnelRadius * Math.sin(shrapnelAngle));
+			
+			this.explode = function() {
+				circle.animate(positionAnimation);
+				circle.animate(exlosionAnimation.delay(animationStepDuration));
+			}
+			
+			var targetPath;
+			
+			this.explodeToPath = function(path) {
+				targetPath = path;
+				circle.animate(positionAnimation);
+				circle.animate(exlosionAnimation.delay(animationStepDuration));
+			}
 		
-		//paper.circle(xPosition, yPosition, 2).attr({"fill":"red"});
-		//paper.circle(toX, toY, 2).attr({"fill":"yellow"});
-		//paper.circle(xPosition, 200, 2).attr({"fill":"black"});
+		}
+	
+		var rocket1 = new Rocket(250, 500);
+		var rocket2 = new Rocket(350, 525);
+		var rocket3 = new Rocket(450, 530);
+		var rocket4 = new Rocket(550, 550);
+		//rocket2.explode();
 		
-		var pathString = "M 300, 100 C " + 
-			toX + "," + toY + " " +
-			(toX + 50) + "," + toY + " " +
-			(toX + 50) + "," + 300;
+		var targetPathNumberTwoString = 
+			"M " + 200 + "," + 625 + 
+			"L " + 225 + "," + 600 +
+			"L " + 250 + "," + 600 +
+			"L " + 275 + "," + 625 +
+			"L " + 275 + "," + 650 +
+			"L " + 200 + "," + 725 +
+			"L " + 275 + "," + 725
+			;
+		var targetPathNumberZeroString = 
+			"M " + 300 + "," + 625 + 
+			"L " + 325 + "," + 600 +
+			"L " + 350 + "," + 600 +
+			"L " + 375 + "," + 625 +
+			"L " + 375 + "," + 700 +
+			"L " + 350 + "," + 725 +
+			"L " + 325 + "," + 725 + 
+			"L " + 300 + "," + 700 + 
+			"L " + 300 + "," + 625 
+			;
+		var targetPathNumberOneString = 
+			"M " + 400 + "," + 625 + 
+			"L " + 425 + "," + 600 +
+			"L " + 425 + "," + 725 +
+			"L " + 400 + "," + 725 +
+			"L " + 450 + "," + 725
+			;
+		var targetPathNumberSevenString = 
+			"M " + 475 + "," + 625 + 
+			"L " + 475 + "," + 600 +
+			"L " + 550 + "," + 600 +
+			"L " + 550 + "," + 625 +
+			"L " + 475 + "," + 725
+			;
 			
 		//console.log(pathString);
+		var targetPath2 = paper.path(targetPathNumberTwoString).attr(pathStyle);
+		var targetPath0 = paper.path(targetPathNumberZeroString).attr(pathStyle);
+		var targetPath1 = paper.path(targetPathNumberOneString).attr(pathStyle);
+		var targetPath7 = paper.path(targetPathNumberSevenString).attr(pathStyle);
 		
-		//paper.path(pathString);
-		
-		circle.animate(positionAnimation);
-		circle.animate(exlosionAnimation.delay(animationStepDuration));
+		//rocket1.explode();
+		rocket1.explodeToPath(targetPath2);
+		rocket2.explodeToPath(targetPath0);
+		rocket3.explodeToPath(targetPath1);
+		rocket4.explodeToPath(targetPath7);
 		
 		// Following doesn't work, you must put it into the continuation of the previous animation
 		//circle.animate(explosionFadeOut.delay(2000));
