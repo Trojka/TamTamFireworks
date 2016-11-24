@@ -16,10 +16,10 @@
 	
 			
 		var pathStyle = {
-			"opacity":0
+			"opacity":1
 		}
 	
-        var paper = Raphael("canvasDiv", 650, 1000);   
+        var paper = Raphael("canvasDiv", 800, 1000);   
 
 		paper.customAttributes.guide = function(g) {
 			return {guide: g};
@@ -86,7 +86,7 @@
 				"r" : (initialRadius * explosionExpansionRate1 * explosionExpansionRate2),
 				"fill" : "#FFFFFF",
 				"stroke" : "#FFFFFF"
-			}, animationStepDuration, 'easeOut', pathTargetAnimation);
+			}, animationStepDuration, 'easeOut', endAnimation);
 			
 			function defaultTargetAnimation() {
 				var count = 28;
@@ -233,7 +233,106 @@
 					explosionIndex++;
 				});
 			}
+
+			function sectionPathTargetAnimation() {
+				var count = 28;
+				var angleSpacing = (2 * Math.PI) / count;
+
+				paper.setStart();
+				for (i = 0; i < count; i++) {
+					var circle = paper.circle(xPosition, yPosition, 5);
+				}
+				var explosionSet = paper.setFinish();
+
+				explosionSet.attr(explosionStyle);
+
+				var explosionIndex = 0;
+
+				var startCount = Math.ceil(startRingAngle / angleSpacing);
+				var endCount = Math.floor(endRingAngle / angleSpacing);
+
+				var startOffset = targetPath.getTotalLength() * startTargetPath;
+				var pathStep = ((targetPath.getTotalLength() * endTargetPath) - startOffset) / (endCount - startCount);
+
+				explosionSet.forEach(function (e) {
+					var shrapnelAngle = explosionIndex * angleSpacing;
+					if (shrapnelAngle < startRingAngle || shrapnelAngle > endRingAngle) {
+						explosionIndex++;
+						return;
+					}
+
+					var shrapnelRadius = (initialRadius * explosionShrapnelExpansionRate);
+
+					var centerPt = xPosition + ", " + yPosition;
+					var startX = xPosition + (shrapnelRadius * Math.cos(shrapnelAngle));
+					var startY = yPosition + (shrapnelRadius * Math.sin(shrapnelAngle));
+					var toX = startX + (shrapnelRadius * Math.cos(shrapnelAngle));
+					var toY = startY + (shrapnelRadius * Math.sin(shrapnelAngle));
+					var ctrlP2XDelta = (Math.sign(Math.sin(shrapnelAngle)) < 0) ? ((Math.sign(Math.cos(shrapnelAngle))) * 50) : (shrapnelRadius * Math.cos(shrapnelAngle));
+					var ctrlP2YDelta = (Math.sign(Math.sin(shrapnelAngle)) < 0) ? 0 : (shrapnelRadius * Math.sin(shrapnelAngle));
+
+					var endPoint = targetPath.getPointAtLength(startOffset + explosionIndex * pathStep);
+
+					//console.log(explosionIndex + ", " + Math.sign(Math.sin(shrapnelAngle)) + ", " + ctrlP2YDelta);
+
+					//https://www.safaribooksonline.com/library/view/raphaeljs/9781449365356/ch04.html
+					var startPt = startX + ", " + startY;
+					var ctrlP1 = toX + "," + toY + " ";
+					var ctrlP2 = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta) + " ";
+					//var endP = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta + yInitPos)
+					var endP = endPoint.x + "," + endPoint.y;
+
+					//paper.circle(startX, startY, 2).attr({"fill":"green"});
+					//paper.circle(toX, toY, 2).attr({"fill":"blue"});
+					//paper.circle((toX + ctrlP2XDelta), (toY + ctrlP2YDelta), 2).attr({"fill":"yellow"});
+					//paper.circle((toX + ctrlP2XDelta), (toY + ctrlP2YDelta + 300), 2).attr({"fill":"brown"});
+
+					var pathString =
+						"M " + centerPt +
+						"L " + startPt +
+						"M " + startPt +
+						" C " +
+						ctrlP1 +
+						ctrlP2 +
+						endP;
+
+					//console.log(pathString);
+					var path = paper.path(pathString).attr(pathStyle);
+					var elem = e;
+					var duration = animationStepDuration * path.getTotalLength() / shrapnelRadius;
+
+					// Animate along a path
+					// https://www.safaribooksonline.com/library/view/learning-raphael-js/9781782169161/ch05s05.html
+					// http://stackoverflow.com/questions/13295656/raphaeljs-2-1-animate-along-path
+					// https://github.com/DmitryBaranovskiy/raphaeljs.com/blob/master/gear.html
+					// https://dmitrybaranovskiy.github.io/raphael/reference.html#Paper.customAttributes
+
+					e.attr({
+						guide: path,
+						along: 0
+					});
+
+					e.animate({
+						along: 1
+					}, duration, 'easeOut');
+
+					explosionIndex++;
+				});
+			}
+
+			function endAnimation() {
+				if(mode == 0) {
+					defaultTargetAnimation();
+				}
+				if (mode == 1) {
+					pathTargetAnimation();
+				}
+				if (mode == 2) {
+					sectionPathTargetAnimation();
+				}
+			}
 		
+			var mode = 0;
 			
 			this.explode = function() {
 				circle.animate(positionAnimation);
@@ -243,7 +342,24 @@
 			var targetPath;
 			
 			this.explodeToPath = function(path) {
+				mode = 1;
 				targetPath = path;
+				circle.animate(positionAnimation);
+				circle.animate(exlosionAnimation.delay(animationStepDuration));
+			}
+			
+			var startTargetPath;
+			var endTargetPath;
+			var startRingAngle;
+			var endRingAngle;
+			
+			this.explodeToPathSection = function(path, startPathOffset, endPathOffset, startAngle, endAngle) {
+				mode = 2;
+				targetPath = path;
+				startTargetPath = startPathOffset;
+				endTargetPath = endPathOffset;
+				startRingAngle = startAngle;
+				endRingAngle = endAngle;
 				circle.animate(positionAnimation);
 				circle.animate(exlosionAnimation.delay(animationStepDuration));
 			}
@@ -254,7 +370,12 @@
 		var rocket2 = new Rocket(350, 525);
 		var rocket3 = new Rocket(450, 530);
 		var rocket4 = new Rocket(550, 550);
+		
+		//rocket1.explode();
 		//rocket2.explode();
+		//rocket3.explode();
+		//rocket4.explode();
+
 		
 		var targetPathNumberTwoString = 
 			"M " + 200 + "," + 625 + 
@@ -291,17 +412,22 @@
 			"L " + 475 + "," + 725
 			;
 			
-		//console.log(pathString);
 		var targetPath2 = paper.path(targetPathNumberTwoString).attr(pathStyle);
 		var targetPath0 = paper.path(targetPathNumberZeroString).attr(pathStyle);
 		var targetPath1 = paper.path(targetPathNumberOneString).attr(pathStyle);
 		var targetPath7 = paper.path(targetPathNumberSevenString).attr(pathStyle);
 		
-		//rocket1.explode();
-		rocket1.explodeToPath(targetPath2);
-		rocket2.explodeToPath(targetPath0);
-		rocket3.explodeToPath(targetPath1);
-		rocket4.explodeToPath(targetPath7);
+		rocket1.explodeToPathSection(targetPath2, 0.25, 0.75, Math.PI / 4, 3 * Math.PI / 4);
+		//rocket2.explodeToPath(targetPath0);
+		//rocket3.explodeToPath(targetPath1);
+		//rocket4.explodeToPath(targetPath7);
+		
+		
+		
+		
+		
+		
+		
 		
 		// Following doesn't work, you must put it into the continuation of the previous animation
 		//circle.animate(explosionFadeOut.delay(2000));
