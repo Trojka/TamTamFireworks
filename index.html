@@ -42,6 +42,7 @@
 	
 		function Rocket(xPos, yPos) {
 			var initialRadius = 5;
+			var shardRadius = 5;
 			var explosionExpansionRate1 = 4;
 			var explosionExpansionRate2 = 1.25;
 			var explosionShrapnelExpansionRate = 15;
@@ -94,7 +95,7 @@
 				
 				paper.setStart();
 				for(i = 0; i < count; i++) {
-					var circle = paper.circle(xPosition, yPosition, 5);
+					var circle = paper.circle(xPosition, yPosition, shardRadius);
 				}
 				var explosionSet = paper.setFinish();
 				
@@ -165,7 +166,7 @@
 				
 				paper.setStart();
 				for(i = 0; i < count; i++) {
-					var circle = paper.circle(xPosition, yPosition, 5);
+					var circle = paper.circle(xPosition, yPosition, shardRadius);
 				}
 				var explosionSet = paper.setFinish();
 				
@@ -240,7 +241,7 @@
 
 				paper.setStart();
 				for (i = 0; i < count; i++) {
-					var circle = paper.circle(xPosition, yPosition, 5);
+					var circle = paper.circle(xPosition, yPosition, shardRadius);
 				}
 				var explosionSet = paper.setFinish();
 
@@ -256,11 +257,6 @@
 
 				explosionSet.forEach(function (e) {
 					var shrapnelAngle = explosionIndex * angleSpacing;
-					if (shrapnelAngle < startRingAngle || shrapnelAngle > endRingAngle) {
-						explosionIndex++;
-						return;
-					}
-
 					var shrapnelRadius = (initialRadius * explosionShrapnelExpansionRate);
 
 					var centerPt = xPosition + ", " + yPosition;
@@ -271,21 +267,22 @@
 					var ctrlP2XDelta = (Math.sign(Math.sin(shrapnelAngle)) < 0) ? ((Math.sign(Math.cos(shrapnelAngle))) * 50) : (shrapnelRadius * Math.cos(shrapnelAngle));
 					var ctrlP2YDelta = (Math.sign(Math.sin(shrapnelAngle)) < 0) ? 0 : (shrapnelRadius * Math.sin(shrapnelAngle));
 
-					var endPoint = targetPath.getPointAtLength(startOffset + explosionIndex * pathStep);
-
 					//console.log(explosionIndex + ", " + Math.sign(Math.sin(shrapnelAngle)) + ", " + ctrlP2YDelta);
 
 					//https://www.safaribooksonline.com/library/view/raphaeljs/9781449365356/ch04.html
 					var startPt = startX + ", " + startY;
 					var ctrlP1 = toX + "," + toY + " ";
 					var ctrlP2 = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta) + " ";
-					//var endP = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta + yInitPos)
-					var endP = endPoint.x + "," + endPoint.y;
-
-					//paper.circle(startX, startY, 2).attr({"fill":"green"});
-					//paper.circle(toX, toY, 2).attr({"fill":"blue"});
-					//paper.circle((toX + ctrlP2XDelta), (toY + ctrlP2YDelta), 2).attr({"fill":"yellow"});
-					//paper.circle((toX + ctrlP2XDelta), (toY + ctrlP2YDelta + 300), 2).attr({"fill":"brown"});
+					var endP = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta + yInitPos)
+					var endRadius = 0;
+					var shrapnelAngle = explosionIndex * angleSpacing;
+					if (shrapnelAngle < startRingAngle || shrapnelAngle > endRingAngle) {
+					}
+					else {
+						endPoint = targetPath.getPointAtLength(startOffset + (explosionIndex - startCount) * pathStep);
+						endP = endPoint.x + "," + endPoint.y;
+						endRadius = shardRadius;
+					}
 
 					var pathString =
 						"M " + centerPt +
@@ -313,7 +310,8 @@
 					});
 
 					e.animate({
-						along: 1
+						along: 1,
+						r: endRadius
 					}, duration, 'easeOut');
 
 					explosionIndex++;
@@ -417,11 +415,11 @@
 		var targetPath1 = paper.path(targetPathNumberOneString).attr(pathStyle);
 		var targetPath7 = paper.path(targetPathNumberSevenString).attr(pathStyle);
 		
-		rocket1.explodeToPathSection(targetPath2, 0.25, 0.75, Math.PI / 4, 3 * Math.PI / 4);
+		//rocket1.explodeToPathSection(targetPath2, 0, 0.6, 5 * Math.PI / 4, 7 * Math.PI / 4);
 		//rocket2.explodeToPath(targetPath0);
 		//rocket3.explodeToPath(targetPath1);
 		//rocket4.explodeToPath(targetPath7);
-		
+		//rocket4.explode();
 		
 		
 		
