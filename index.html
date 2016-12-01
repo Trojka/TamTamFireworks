@@ -16,7 +16,7 @@
 	
 			
 		var pathStyle = {
-			"opacity":1
+			"opacity":0
 		}
 	
         var paper = Raphael("canvasDiv", 800, 1000);   
@@ -275,6 +275,7 @@
 					var ctrlP2 = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta) + " ";
 					var endP = (toX + ctrlP2XDelta) + "," + (toY + ctrlP2YDelta + yInitPos)
 					var endRadius = 0;
+					var fadeOutAnimation = function () { };
 					var shrapnelAngle = explosionIndex * angleSpacing;
 					if (shrapnelAngle < startRingAngle || shrapnelAngle > endRingAngle) {
 					}
@@ -282,6 +283,14 @@
 						endPoint = targetPath.getPointAtLength(startOffset + (explosionIndex - startCount) * pathStep);
 						endP = endPoint.x + "," + endPoint.y;
 						endRadius = shardRadius;
+
+						fadeOutAnimation = function() {
+							explosionSet.forEach(function (e) {
+								e.animate({
+									opacity: 0
+								}, duration, 'easeOut');
+							});
+						}
 					}
 
 					var pathString =
@@ -312,7 +321,9 @@
 					e.animate({
 						along: 1,
 						r: endRadius
-					}, duration, 'easeOut');
+					}, duration, 'easeOut', fadeOutAnimation);
+
+
 
 					explosionIndex++;
 				});
@@ -364,11 +375,14 @@
 		
 		}
 	
-		var rocket1 = new Rocket(250, 500);
-		var rocket2 = new Rocket(350, 525);
-		var rocket3 = new Rocket(450, 530);
-		var rocket4 = new Rocket(550, 550);
-		
+		var rocket0 = new Rocket(150, 500);
+		var rocket1 = new Rocket(200, 400);
+		var rocket2 = new Rocket(300, 450);
+		var rocket3 = new Rocket(375, 375);
+		var rocket4 = new Rocket(425, 370);
+		var rocket5 = new Rocket(500, 375);
+		var rocket6 = new Rocket(575, 450);
+
 		//rocket1.explode();
 		//rocket2.explode();
 		//rocket3.explode();
@@ -415,12 +429,14 @@
 		var targetPath1 = paper.path(targetPathNumberOneString).attr(pathStyle);
 		var targetPath7 = paper.path(targetPathNumberSevenString).attr(pathStyle);
 		
-		//rocket1.explodeToPathSection(targetPath2, 0, 0.6, 5 * Math.PI / 4, 7 * Math.PI / 4);
-		//rocket2.explodeToPath(targetPath0);
-		//rocket3.explodeToPath(targetPath1);
-		//rocket4.explodeToPath(targetPath7);
-		//rocket4.explode();
-		
+		rocket0.explodeToPathSection(targetPath2, 0, 0.6, 5 * Math.PI / 4, 7 * Math.PI / 4);
+		rocket1.explodeToPathSection(targetPath0, 0, 0.5, 5 * Math.PI / 4, 7 * Math.PI / 4);
+		rocket2.explodeToPathSection(targetPath2, 0.6, 1.0, 5 * Math.PI / 4, 7 * Math.PI / 4);
+		rocket3.explodeToPathSection(targetPath0, 0.5, 1.0, 5 * Math.PI / 4, 7 * Math.PI / 4);
+		rocket4.explodeToPathSection(targetPath7, 0, 0.3, 5 * Math.PI / 4, 7 * Math.PI / 4);
+		rocket5.explodeToPathSection(targetPath1, 0, 1, 1 * Math.PI / 4, 7 * Math.PI / 4);
+		rocket6.explodeToPathSection(targetPath7, 0.3, 1.0, 5 * Math.PI / 4, 7 * Math.PI / 4);
+
 		
 		
 		
